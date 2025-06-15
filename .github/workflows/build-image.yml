@@ -1,0 +1,24 @@
+name: build-image
+on:
+  workflow_dispatch:
+
+env:
+  KUBERNETES_VERSION: 1.32.4
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: kubernetes-sigs/image-builder
+      - name: build-image
+        run: |
+          sudo chmod 666 /dev/kvm
+          docker build -t image-builder images/capi
+          mkdir ${{ github.workspace }}/output && chmod 777 ${{ github.workspace }}/output
+          mkdir ${{ github.workspace }}/.cache && chmod 777 ${{ github.workspace }}/.cache
+          docker run --rm --privileged -e PACKER_FLAGS="--var 'kubernetes_semver=v$KUBERNETES_VERSION'" -e PACKER_LOG=1 -v ${{ github.workspace }}/output:/home/imagebuilder/output/ -v ${{ github.workspace }}/.cache:/home/imagebuilder/.cache/ image-builder build-qemu-ubuntu-2404
+          ls -lha ${{ github.workspace }}/output/
