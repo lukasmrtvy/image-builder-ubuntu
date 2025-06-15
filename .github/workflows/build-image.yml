@@ -20,7 +20,7 @@ jobs:
           docker build -t image-builder images/capi
           mkdir ${{ github.workspace }}/output && chmod 777 ${{ github.workspace }}/output
           mkdir ${{ github.workspace }}/.cache && chmod 777 ${{ github.workspace }}/.cache
-          docker run --rm --privileged -e PACKER_FLAGS="--var 'kubernetes_semver=v$KUBERNETES_VERSION'" -e PACKER_LOG=1 -v ${{ github.workspace }}/output:/home/imagebuilder/output/ -v ${{ github.workspace }}/.cache:/home/imagebuilder/.cache/ image-builder build-qemu-ubuntu-2404
+          docker run --rm --privileged -e PACKER_FLAGS="--var 'kubernetes_semver=v$KUBERNETES_VERSION'" -e PACKER_LOG=1 -v ${{ github.workspace }}/output:/home/imagebuilder/output/ -v ${{ github.workspace }}/.cache:/home/imagebuilder/.cache/ image-builder build-kubevirt-qemu-ubuntu-2404
           ls -lha ${{ github.workspace }}/output/
           ls -lha ${{ github.workspace }}/output/ubuntu-2404-kube-v${{ env.KUBERNETES_VERSION }}
           sudo xz -vT0 ${{ github.workspace }}/output/ubuntu-2404-kube-v${{ env.KUBERNETES_VERSION }}/ubuntu-2404-kube-v${{ env.KUBERNETES_VERSION }}
