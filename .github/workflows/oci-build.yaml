@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         version: [1.36.4]
-        target: 
+        os: 
           - name: kubevirt-build-qemu-ubuntu-2604
           - name: kubevirt-build-qemu-flatcar
 
@@ -23,7 +23,7 @@ jobs:
         path: ${{ github.workspace }}/.cache
         key: ${{matrix.os.name}}-cache
 
-    - name: "Building image for version ${{matrix.version}} on OS ${{matrix.os.target}}"
+    - name: "Building image for version ${{matrix.version}} on OS ${{matrix.os.name}}"
       run: |
         sudo chmod 666 /dev/kvm
         mkdir ${{ github.workspace }}/output && chmod 777 ${{ github.workspace }}/output
