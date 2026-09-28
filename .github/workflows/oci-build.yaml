@@ -39,9 +39,12 @@ jobs:
            --var kubernetes_rpm_version=${K8S_RPM} \
            --var kubernetes_deb_version=${K8S_DEB}"
 
+        DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+
         docker run \
           --rm \
           --privileged \
+          --group-add "$DOCKER_GID" \
           -e PACKER_FLAGS="${PACKER_FLAGS}" \
           -e PACKER_GITHUB_API_TOKEN=${{ secrets.PAT }} \
           -v /var/run/docker.sock:/var/run/docker.sock \
