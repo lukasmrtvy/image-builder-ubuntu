@@ -41,12 +41,13 @@ jobs:
 
         docker run \
           --rm \
+          --device /dev/kvm:/dev/kvm \
           -e PACKER_FLAGS="${PACKER_FLAGS}" \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v ${{ github.workspace }}/output:/home/imagebuilder/output/ \
           -v ${{ github.workspace }}/.cache:/home/imagebuilder/.cache/ \
           ${{ env.IMAGE_BUILDER_DOCKER_IMAGE }} \
-          PACKER_LOG=1 "${{ matrix.os.name }}"
+          "${{ matrix.os.name }}"
 
     - name: Cache intermediate images
       uses: actions/cache/save@v6
