@@ -41,7 +41,7 @@ jobs:
 
         docker run \
           --rm \
-          --device /dev/kvm:/dev/kvm \
+          --privileged \
           -e PACKER_FLAGS="${PACKER_FLAGS}" \
           -e PACKER_GITHUB_API_TOKEN=${{ secrets.PAT }} \
           -v /var/run/docker.sock:/var/run/docker.sock \
