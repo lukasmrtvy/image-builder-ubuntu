@@ -83,7 +83,7 @@ jobs:
 
         timestamp=$(date +%Y%m%d%H%M%S)
 
-        docker build -f Dockerfile --build-arg ARTIFACT_NAME=$file -t floatingcontainers/$file:$timestamp .
+        docker build -f Dockerfile --build-arg ARTIFACT_NAME=$fullpath -t floatingcontainers/$basename:$timestamp .
 
     - name: Cache intermediate images
       uses: actions/cache/save@v6
