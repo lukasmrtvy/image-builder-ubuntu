@@ -1,96 +1,26 @@
-name: Build CAPI OCI Image
-on:
-  workflow_dispatch:
+file=$(find "${{ github.workspace }}/output/" -type f -name '*.iso' -print -quit 2>/dev/null)
 
-env:
-  IMAGE_BUILDER_DOCKER_IMAGE:  registry.k8s.io/scl-image-builder/cluster-node-image-builder-amd64:v0.1.55
+fullpath="$file"
+basename="${file##*/}"
+name="${basename%.iso}"
+timestamp=$(date +%Y%m%d%H%M%S)
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        version: [1.36.4]
-        os: 
-          - name: build-qemu-flatcar
-            iso_url: https://stable.release.flatcar-linux.net/amd64-usr/4593.2.5/flatcar_production_iso_image.iso
-            iso_checksum: https://stable.release.flatcar-linux.net/amd64-usr/4593.2.5/flatcar_production_iso_image.iso.DIGESTS.asc
-            iso_checksum_type: file
-          - name: build-qemu-ubuntu-2604 
-            iso_url: https://mirrors.mit.edu/ubuntu-releases/26.04/ubuntu-26.04.1-live-server-amd64.iso
-            iso_checksum: cc8a95cde20f6ced61a322420de00f10cc3c90ced545daa46cb9c1a117f1d927
-            iso_checksum_type: sha256
+echo "Full path: $fullpath"
+echo "Basename:  $basename"
+echo "Name:      $name"
+echo "Timestamp: $timestamp"
 
-    steps:
-    - name: Cache intermediate images
-      uses: actions/cache/restore@v6
-      with:
-        path: ${{ github.workspace }}/.cache
-        key: ${{ matrix.os.name }}-cache
+cat << EOF > Dockerfile
+FROM registry.access.redhat.com/ubi8/ubi:latest AS builder
+ARG ARTIFACT_NAME
+ADD --chown=107:107 \${ARTIFACT_NAME} /disk/image.qcow2
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v4
-      with:
-        username: ${{ vars.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+FROM scratch
+COPY --from=builder /disk/* /disk/
+EOF
 
-    - name: "Building image for version ${{matrix.version}} on OS ${{matrix.os.name}}"
-      run: |
-        sudo chmod 666 /dev/kvm
-        mkdir ${{ github.workspace }}/output && chmod 777 ${{ github.workspace }}/output
-        mkdir ${{ github.workspace }}/.cache && chmod 777 ${{ github.workspace }}/.cache
-        K8S_RAW="${{ matrix.version }}"
-        K8S_SEMVER="v${K8S_RAW}"
-        K8S_RPM="${K8S_RAW}"
-        K8S_DEB="${K8S_RAW}-1.1"
-        K8S_SERIES="v${K8S_RAW%.*}"
-
-        PACKER_FLAGS="--var kubernetes_semver=${K8S_SEMVER} \
-           --var kubernetes_series=${K8S_SERIES} \
-           --var kubernetes_rpm_version=${K8S_RPM} \
-           --var kubernetes_deb_version=${K8S_DEB} \
-           --var iso_url=${{ matrix.os.iso_url }} \
-           --var iso_checksum=${{ matrix.os.iso_checksum }} \
-           --var iso_checksum_type=${{ matrix.os.iso_checksum_type }}"
-
-        docker run \
-          --rm \
-          --device /dev/kvm:/dev/kvm \
-          -e PACKER_FLAGS="${PACKER_FLAGS}" \
-          -e PACKER_GITHUB_API_TOKEN=${{ secrets.PAT }} \
-          -v ${{ github.workspace }}/output:/home/imagebuilder/output/ \
-          -v ${{ github.workspace }}/.cache:/home/imagebuilder/.cache/ \
-          ${{ env.IMAGE_BUILDER_DOCKER_IMAGE }} \
-          "${{ matrix.os.name }}"
-
-        file=$(find ${{ github.workspace }}/output/ -type f -name '*.iso' -print -quit 2>/dev/null); fullpath="$file"; basename="${file##*/}"
-        echo "echoying file:"
-        echo $fullpath
-        echo $basename
-        echo "done"
-
-        cat << EOF > Dockerfile
-        FROM registry.access.redhat.com/ubi8/ubi:latest AS builder
-        ARG ARTIFACT_NAME                                           
-        ADD --chown=107:107 $ARTIFACT_NAME /disk/image.qcow2                                            
-                                                                                                                        
-        FROM scratch                                                                                                    
-        COPY --from=builder /disk/* /disk/
-        EOF
-
-        cat Dockerfile
-
-        timestamp=$(date +%Y%m%d%H%M%S)
-
-        docker build -f Dockerfile --build-arg ARTIFACT_NAME=$fullpath -t floatingcontainers/$basename:$timestamp .
-
-    - name: Cache intermediate images
-      uses: actions/cache/save@v6
-      if: ${{matrix.os.enabled}}
-      with:
-        path: ${{ github.workspace }}/.cache
-        key: ${{matrix.os.name}}-cache
-
-    - run: |
-        ls -lha ${{ github.workspace }}/output/
+docker build \
+  -f Dockerfile \
+  --build-arg "ARTIFACT_NAME=output/$basename" \
+  -t "floatingcontainers/$name:$timestamp" \
+  .
