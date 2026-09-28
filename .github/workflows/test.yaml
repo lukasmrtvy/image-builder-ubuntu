@@ -1,0 +1,33 @@
+name: Test
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+    - name: "Building image for version ${{matrix.version}} on OS ${{matrix.os.name}}"
+      run: |
+        sudo chmod 666 /dev/kvm
+        mkdir ${{ github.workspace }}/output && chmod 777 ${{ github.workspace }}/output
+        mkdir ${{ github.workspace }}/.cache && chmod 777 ${{ github.workspace }}/.cache
+        
+
+        mkdir -p ${{ github.workspace }}/output/tralala/
+        touch ${{ github.workspace }}/output/tralala/myimage.iso
+
+
+        file=$(find "${{ github.workspace }}/output/" -type f -name '*.iso' -print -quit 2>/dev/null)
+
+        fullpath="$file"
+        basename="${file##*/}"
+        name="${basename%.iso}"
+        timestamp=$(date +%Y%m%d%H%M%S)
+
+        echo "Full path: $fullpath"
+        echo "Basename:  $basename"
+        echo "Name:      $name"
+        echo "Timestamp: $timestamp"
