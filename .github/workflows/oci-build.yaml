@@ -92,12 +92,11 @@ jobs:
             -t "floatingcontainers/$name:$timestamp" \
             .
 
+          docker push "floatingcontainers/$name:$timestamp"
+
     - name: Cache intermediate images
       uses: actions/cache/save@v6
       if: ${{matrix.os.enabled}}
       with:
         path: ${{ github.workspace }}/.cache
         key: ${{matrix.os.name}}-cache
-
-    - run: |
-        ls -lha ${{ github.workspace }}/output/
