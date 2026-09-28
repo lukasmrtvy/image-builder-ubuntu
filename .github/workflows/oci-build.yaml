@@ -86,7 +86,7 @@ jobs:
         cat << EOF > Dockerfile
         FROM registry.access.redhat.com/ubi8/ubi:latest AS builder
         ARG ARTIFACT_NAME
-        ADD --chown=107:107 \${ARTIFACT_NAME} /disk/image.qcow2
+        ADD --chown=644 \${ARTIFACT_NAME} /disk/image.qcow2
 
         FROM scratch
         COPY --from=builder /disk/* /disk/
