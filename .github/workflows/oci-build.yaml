@@ -52,7 +52,8 @@ jobs:
            --var kubernetes_deb_version=${K8S_DEB} \
            --var iso_url=${{ matrix.os.iso_url }} \
            --var iso_checksum=${{ matrix.os.iso_checksum }} \
-           --var iso_checksum_type=${{ matrix.os.iso_checksum_type }}"
+           --var iso_checksum_type=${{ matrix.os.iso_checksum_type }} \
+           --var output_directory='./output/image/'"
 
         docker run \
           --rm \
@@ -64,7 +65,7 @@ jobs:
           ${{ env.IMAGE_BUILDER_DOCKER_IMAGE }} \
           "${{ matrix.os.name }}"
 
-          file=$(find "${{ github.workspace }}/output/" -type f -name '*.iso' -print -quit 2>/dev/null)
+          file=$(find "${{ github.workspace }}/output/image/" -type f -name '*' -print -quit 2>/dev/null)
 
           fullpath="$file"
           basename="${file##*/}"
