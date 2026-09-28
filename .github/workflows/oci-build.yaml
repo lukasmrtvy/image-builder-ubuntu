@@ -105,6 +105,6 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v3
       with:
-        tag_name: "$name ($timestamp)"
+        tag_name: "$name-$timestamp"
         body: |
           `docker pull floatingcontainers/$name:$timestamp`
