@@ -42,7 +42,6 @@ jobs:
         docker run \
           --rm \
           --device /dev/kvm:/dev/kvm \
-          --env-file extra-env \
           -e PACKER_FLAGS="${PACKER_FLAGS}" \
           -e PACKER_LOG=0 \
           -v ${{ github.workspace }}/output:/home/imagebuilder/output/ \
