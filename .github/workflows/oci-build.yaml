@@ -13,8 +13,8 @@ jobs:
       matrix:
         version: [1.36.4]
         os: 
-          - name: kubevirt-build-qemu-ubuntu-2604
-          - name: kubevirt-build-qemu-flatcar
+          - name: build-kubevirt-qemu-ubuntu-2604
+          - name: build-kubevirt-qemu-flatcar
 
     steps:
     - name: Cache intermediate images
