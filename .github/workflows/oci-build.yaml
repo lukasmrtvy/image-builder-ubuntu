@@ -41,9 +41,10 @@ jobs:
 
         docker run \
           --rm \
-          --device /dev/kvm:/dev/kvm \
           -e PACKER_FLAGS="${PACKER_FLAGS}" \
           -e PACKER_LOG=0 \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v /usr/bin/docker:/usr/bin/docker:ro \
           -v ${{ github.workspace }}/output:/home/imagebuilder/output/ \
           -v ${{ github.workspace }}/.cache:/home/imagebuilder/.cache/ \
           ${{ env.IMAGE_BUILDER_DOCKER_IMAGE }} \
