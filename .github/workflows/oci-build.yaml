@@ -8,6 +8,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -88,7 +90,7 @@ jobs:
 
         docker build \
           -f Dockerfile \
-          --build-arg "ARTIFACT_NAME=output/$basename" \
+          --build-arg "ARTIFACT_NAME=output/image/$basename" \
           -t "floatingcontainers/$name:$timestamp" \
           .
 
@@ -99,3 +101,10 @@ jobs:
       with:
         path: ${{ github.workspace }}/.cache
         key: ${{ matrix.os.name }}-cache
+
+    - name: Release
+      uses: softprops/action-gh-release@v3
+      with:
+        tag_name: "$name ($timestamp)"
+        body: |
+          `docker pull floatingcontainers/$name:$timestamp`
