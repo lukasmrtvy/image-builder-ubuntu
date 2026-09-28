@@ -38,6 +38,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: "Building image for version ${{matrix.version}} on OS ${{matrix.os.name}}"
+      id: build
       run: |
         sudo chmod 666 /dev/kvm
         mkdir ${{ github.workspace }}/output && chmod 777 ${{ github.workspace }}/output
@@ -74,6 +75,9 @@ jobs:
         name="${basename%.iso}"
         timestamp=$(date +%Y%m%d%H%M%S)
 
+        echo "name=$name" >> "$GITHUB_OUTPUT"
+        echo "timestamp=$timestamp" >> "$GITHUB_OUTPUT"
+
         echo "Full path: $fullpath"
         echo "Basename:  $basename"
         echo "Name:      $name"
@@ -105,6 +109,6 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v3
       with:
-        tag_name: "$name-$timestamp"
+        tag_name: "${{ steps.build.outputs.name }}-${{ steps.build.outputs.timestamp }}"
         body: |
-          `docker pull floatingcontainers/$name:$timestamp`
+          `docker pull floatingcontainers/${{ steps.build.outputs.name }}:${{ steps.build.outputs.timestamp }}`
