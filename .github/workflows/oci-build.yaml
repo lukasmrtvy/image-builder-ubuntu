@@ -18,7 +18,7 @@ jobs:
             iso_checksum: https://stable.release.flatcar-linux.net/amd64-usr/4593.2.5/flatcar_production_iso_image.iso.DIGESTS.asc
             iso_checksum_type: file
           - name: build-qemu-ubuntu-2604 
-            iso_url: https://releases.ubuntu.com/26.04.1/ubuntu-26.04.1-live-server-amd64.iso
+            iso_url: https://mirrors.mit.edu/ubuntu-releases/26.04/ubuntu-26.04.1-live-server-amd64.iso
             iso_checksum: cc8a95cde20f6ced61a322420de00f10cc3c90ced545daa46cb9c1a117f1d927
             iso_checksum_type: sha256
 
@@ -65,7 +65,9 @@ jobs:
           "${{ matrix.os.name }}"
 
         file=$(find ${{ github.workspace }}/output/ -type f -name '*.iso' -print -quit 2>/dev/null); fullpath="$file"; basename="${file##*/}"
+        echo "echoying file:"
         echo $file
+        echo "done"
 
         cat << EOF > Dockerfile
         FROM registry.access.redhat.com/ubi8/ubi:latest AS builder
@@ -80,7 +82,7 @@ jobs:
 
         timestamp=$(date +%Y%m%d%H%M%S)
 
-        docker build -f Dockerfile --build-arg ARTIFACT_NAME=$file -t floatingcontainers/$file:$timestamp
+        docker build -f Dockerfile --build-arg ARTIFACT_NAME=$file -t floatingcontainers/$file:$timestamp .
 
     - name: Cache intermediate images
       uses: actions/cache/save@v6
