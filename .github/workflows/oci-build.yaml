@@ -1,0 +1,61 @@
+name: Build CAPI OCI Image
+on:
+  workflow_dispatch:
+
+env:
+  IMAGE_BUILDER_DOCKER_IMAGE:  registry.k8s.io/scl-image-builder/cluster-node-image-builder-amd64:v0.1.55
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [1.36.4]
+        target: 
+          - name: kubevirt-build-qemu-ubuntu-2604
+          - name: kubevirt-build-qemu-flatcar
+
+    steps:
+    - name: Cache intermediate images
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ github.workspace }}/.cache
+        key: ${{matrix.os.name}}-cache
+
+    - name: "Building image for version ${{matrix.version}} on OS ${{matrix.os.target}}"
+      run: |
+        sudo chmod 666 /dev/kvm
+        mkdir ${{ github.workspace }}/output && chmod 777 ${{ github.workspace }}/output
+        mkdir ${{ github.workspace }}/.cache && chmod 777 ${{ github.workspace }}/.cache
+        K8S_RAW="${{ matrix.version }}"
+        K8S_SEMVER="v${K8S_RAW}"
+        K8S_RPM="${K8S_RAW}"
+        K8S_DEB="${K8S_RAW}-1.1"
+        K8S_SERIES="v${K8S_RAW%.*}"
+
+        PACKER_FLAGS="--var kubernetes_semver=${K8S_SEMVER} \
+           --var kubernetes_series=${K8S_SERIES} \
+           --var kubernetes_rpm_version=${K8S_RPM} \
+           --var kubernetes_deb_version=${K8S_DEB}"
+
+        docker run \
+          --rm \
+          --device /dev/kvm:/dev/kvm \
+          --env-file extra-env \
+          -e PACKER_FLAGS="${PACKER_FLAGS}" \
+          -e PACKER_LOG=0 \
+          -v ${{ github.workspace }}/output:/home/imagebuilder/output/ \
+          -v ${{ github.workspace }}/.cache:/home/imagebuilder/.cache/ \
+          ${{ env.IMAGE_BUILDER_DOCKER_IMAGE }} \
+          "${{ matrix.os.name }}"
+
+    - name: Cache intermediate images
+      uses: actions/cache/save@v6
+      if: ${{matrix.os.enabled}}
+      with:
+        path: ${{ github.workspace }}/.cache
+        key: ${{matrix.os.name}}-cache
+
+    - run: |
+        ls -lha ${{ github.workspace }}/output/
